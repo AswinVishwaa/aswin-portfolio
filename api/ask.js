@@ -6,11 +6,6 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { Document } from "langchain/document";
 import { FakeEmbeddings } from "langchain/embeddings/fake";
 
-// ✅ Import markdown and JSON as raw/static files
-import aboutRaw from "../src/data/about.md?raw";
-import projects from "../src/data/projects.json";
-
-// ✅ Use Edge runtime for compatibility
 export const config = {
   runtime: "edge",
 };
@@ -22,34 +17,59 @@ export default async function handler(req) {
       return new Response("Missing prompt", { status: 400 });
     }
 
-    // 1. Construct documents
+    // 1. Fetch files from public/
+    const [aboutRes, projectRes] = await Promise.all([
+      fetch(`${process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : ''}/data/about.md`),
+      fetch(`${process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : ''}/data/projects.json`),
+    ]);
+
+    const [aboutRaw, projects] = await Promise.all([
+      aboutRes.text(),
+      projectRes.json(),
+    ]);
+
+    // 2. Create documents
     const docs = [
       new Document({ pageContent: aboutRaw }),
-      ...projects.map(
-        (p) =>
-          new Document({
-            pageContent: `${p.title}: ${p.desc}. Tech: ${p.tech.join(", ")}`,
-          })
+      ...projects.map((p) =>
+        new Document({
+          pageContent: `${p.title}: ${p.desc}. Tech: ${p.tech.join(", ")}`,
+        })
       ),
     ];
 
-    // 2. Split
+    // 3. Split
     const splitter = new RecursiveCharacterTextSplitter({ chunkSize: 300 });
     const splitDocs = await splitter.splitDocuments(docs);
 
-    // 3. Embed
-    const vectorStore = await MemoryVectorStore.fromDocuments(
-      splitDocs,
-      new FakeEmbeddings()
-    );
+    // 4. Embed
+    const vectorStore = await MemoryVectorStore.fromDocuments(splitDocs, new FakeEmbeddings());
     const retriever = vectorStore.asRetriever();
 
-    // 4. Model (Groq fallback to plain response)
-    const responseText = `This is a mock response. Your prompt was:\n\n"${prompt}"\n\nRAG would happen here using Groq + HF in full version.`;
+    // 5. Prompt
+    const promptTemplate = ChatPromptTemplate.fromTemplate(
+      `Answer the user's question using the context below:\n\n{context}\n\nQuestion: {input}`
+    );
 
-    return new Response(responseText);
+    const combineDocsChain = await createStuffDocumentsChain({
+      llm: {
+        call: async ({ messages }) => ({
+          content: `This is a fake response.\nPrompt: "${prompt}"\nDocs used:\n${docs.length} documents.`,
+        }),
+      },
+      prompt: promptTemplate,
+    });
+
+    const retrievalChain = await createRetrievalChain({
+      retriever,
+      combineDocsChain,
+    });
+
+    const result = await retrievalChain.invoke({ input: prompt });
+
+    return new Response(result.output);
   } catch (err) {
-    console.error("❌ Error in ask API:", err);
-    return new Response("Oops! Internal server error.", { status: 500 });
+    console.error("❌ ask.js error:", err);
+    return new Response("Internal error", { status: 500 });
   }
 }
