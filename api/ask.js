@@ -5,20 +5,29 @@ import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { LangChainAdapter } from "vercel-ai-langchain-adaptor";
 import { Document } from "langchain/document";
+import fs from "fs";
+import path from "path";
 
-import aboutRaw from "../src/data/about.md?raw"; // ✅ use Vite's raw loader
-import projects from "../src/data/projects.json"; // ✅ static import
-
-// ✅ Keep runtime nodejs only if needed
+// ✅ Use Node.js runtime to support fs
 export const config = {
   runtime: "nodejs",
 };
 
+// ✅ Dynamic imports for Groq + HF
 const { ChatGroq } = await import("langchain/experimental/chat_models/groq");
 const { HuggingFaceInferenceEmbeddings } = await import("langchain/experimental/embeddings/hf");
 
+// ✅ Read files from root-level /data/
+const aboutPath = path.resolve(process.cwd(), "data/about.md");
+const projectsPath = path.resolve(process.cwd(), "data/projects.json");
+
+const aboutRaw = fs.readFileSync(aboutPath, "utf-8");
+const projectsRaw = fs.readFileSync(projectsPath, "utf-8");
+const projects = JSON.parse(projectsRaw);
+
 export default LangChainAdapter(async (req) => {
   const { prompt } = await req.json();
+  console.log("Incoming prompt:", prompt);
 
   const docs = [
     new Document({ pageContent: aboutRaw }),
