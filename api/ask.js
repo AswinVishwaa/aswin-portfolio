@@ -7,7 +7,7 @@ import { LangChainAdapter } from "vercel-ai-langchain-adaptor";
 import { Document } from "langchain/document";
 
 import aboutRaw from "../data/about.md?raw";
-import projects from "../data/projects.json";
+import projects from "../src/data/projects.json";
 
 // ✅ Edge config for Vercel
 export const config = {
@@ -21,6 +21,7 @@ const { HuggingFaceInferenceEmbeddings } = await import("langchain/experimental/
 export default LangChainAdapter(async (req) => {
   const { prompt } = await req.json();
 
+  console.log("Prompt received:", prompt);
   // 1. Create documents from about + projects
   const docs = [
     new Document({ pageContent: aboutRaw }),
