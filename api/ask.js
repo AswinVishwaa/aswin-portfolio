@@ -5,24 +5,28 @@ import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { LangChainAdapter } from "vercel-ai-langchain-adaptor";
 import { Document } from "langchain/document";
+import fs from "fs";
+import path from "path";
+import projects from "../data/projects.json"; // not from /src
 
-import aboutRaw from "../data/about.md?raw";
-import projects from "../src/data/projects.json";
-
-// ✅ Edge config for Vercel
+// Use Node.js runtime (✅ supports fs and experimental packages)
 export const config = {
-  runtime: "edge",
+  runtime: "nodejs",
 };
 
-// ✅ Import Groq + HF embeddings from experimental exports
+// Dynamic imports (✅ supported in nodejs runtime)
 const { ChatGroq } = await import("langchain/experimental/chat_models/groq");
 const { HuggingFaceInferenceEmbeddings } = await import("langchain/experimental/embeddings/hf");
 
+// Read about.md using fs
+const aboutPath = path.resolve(process.cwd(), "data/about.md");
+const aboutRaw = fs.readFileSync(aboutPath, "utf-8");
+
 export default LangChainAdapter(async (req) => {
   const { prompt } = await req.json();
+  console.log("Incoming prompt:", prompt);
 
-  console.log("Prompt received:", prompt);
-  // 1. Create documents from about + projects
+  // 1. Load documents (about + projects)
   const docs = [
     new Document({ pageContent: aboutRaw }),
     ...projects.map(
@@ -33,7 +37,7 @@ export default LangChainAdapter(async (req) => {
     ),
   ];
 
-  // 2. Split docs into chunks
+  // 2. Chunk split
   const splitter = new RecursiveCharacterTextSplitter({ chunkSize: 300 });
   const splitDocs = await splitter.splitDocuments(docs);
 
@@ -43,8 +47,8 @@ export default LangChainAdapter(async (req) => {
     model: "sentence-transformers/all-MiniLM-L6-v2",
   });
 
-  const vectorStore = await MemoryVectorStore.fromDocuments(splitDocs, embeddings);
-  const retriever = vectorStore.asRetriever();
+  const store = await MemoryVectorStore.fromDocuments(splitDocs, embeddings);
+  const retriever = store.asRetriever();
 
   // 4. LLM from Groq
   const model = new ChatGroq({
@@ -53,24 +57,23 @@ export default LangChainAdapter(async (req) => {
     temperature: 0.4,
   });
 
-  // 5. Prompt template
+  // 5. Prompt
   const promptTemplate = ChatPromptTemplate.fromTemplate(
     `Answer the user's question using the context below:\n\n{context}\n\nQuestion: {input}`
   );
 
-  // 6. Combine documents chain
+  // 6. Chain
   const combineDocsChain = await createStuffDocumentsChain({
     llm: model,
     prompt: promptTemplate,
   });
 
-  // 7. Retrieval QA chain
   const retrievalChain = await createRetrievalChain({
     retriever,
     combineDocsChain,
   });
 
-  // 8. Run it
+  // 7. Run it
   const result = await retrievalChain.invoke({ input: prompt });
 
   return new Response(result.output);
