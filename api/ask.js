@@ -5,27 +5,31 @@ import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { LangChainAdapter } from "vercel-ai-langchain-adaptor";
 import { Document } from "langchain/document";
-import { readFileSync } from "fs";
-import { join } from "path";
+import fs from "fs";
+import path from "path";
 
-// Edge config
+// ✅ Use Node.js runtime for fs and dynamic imports
 export const config = {
-  runtime: "edge",
+  runtime: "nodejs",
 };
 
-// Import Groq + HF embeddings from experimental exports
+// ✅ Dynamic imports
 const { ChatGroq } = await import("langchain/experimental/chat_models/groq");
 const { HuggingFaceInferenceEmbeddings } = await import("langchain/experimental/embeddings/hf");
 
+// ✅ Read about.md and projects.json from src/data/
+const aboutPath = path.resolve(process.cwd(), "src/data/about.md");
+const projectsPath = path.resolve(process.cwd(), "src/data/projects.json");
+
+const aboutRaw = fs.readFileSync(aboutPath, "utf-8");
+const projectsRaw = fs.readFileSync(projectsPath, "utf-8");
+const projects = JSON.parse(projectsRaw);
+
 export default LangChainAdapter(async (req) => {
   const { prompt } = await req.json();
+  console.log("Incoming prompt:", prompt);
 
-  // ✅ Read files at runtime
-  const aboutRaw = readFileSync(join(process.cwd(), "data/about.md"), "utf8");
-  const projectsRaw = readFileSync(join(process.cwd(), "data/projects.json"), "utf8");
-  const projects = JSON.parse(projectsRaw);
-
-  // 1. Create documents from about + projects
+  // 1. Create docs
   const docs = [
     new Document({ pageContent: aboutRaw }),
     ...projects.map(
@@ -36,7 +40,7 @@ export default LangChainAdapter(async (req) => {
     ),
   ];
 
-  // 2. Split docs into chunks
+  // 2. Split
   const splitter = new RecursiveCharacterTextSplitter({ chunkSize: 300 });
   const splitDocs = await splitter.splitDocuments(docs);
 
@@ -49,7 +53,7 @@ export default LangChainAdapter(async (req) => {
   const vectorStore = await MemoryVectorStore.fromDocuments(splitDocs, embeddings);
   const retriever = vectorStore.asRetriever();
 
-  // 4. LLM from Groq
+  // 4. LLM
   const model = new ChatGroq({
     apiKey: process.env.GROQ_API_KEY,
     model: "llama3-8b-8192",
@@ -61,7 +65,7 @@ export default LangChainAdapter(async (req) => {
     `Answer the user's question using the context below:\n\n{context}\n\nQuestion: {input}`
   );
 
-  // 6. Chain
+  // 6. Combine chain
   const combineDocsChain = await createStuffDocumentsChain({
     llm: model,
     prompt: promptTemplate,
@@ -72,8 +76,7 @@ export default LangChainAdapter(async (req) => {
     combineDocsChain,
   });
 
-  // 7. Invoke
+  // 7. Run
   const result = await retrievalChain.invoke({ input: prompt });
-
   return new Response(result.output);
 });
