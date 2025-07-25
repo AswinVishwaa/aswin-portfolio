@@ -4,7 +4,6 @@ import { Link as ScrollLink } from "react-scroll";
 import { Link, useNavigate } from "react-router-dom";
 import Particles from "react-tsparticles";
 import { loadSlim } from "tsparticles-slim";
-import projects from "../data/projects.json";
 
 const BlogPreview = () => {
   const navigate = useNavigate();
@@ -161,6 +160,17 @@ const Home = () => {
   }, []);
 
   const navigate = useNavigate();
+  const [projects, setProjects] = useState([]);
+  useEffect(() => {
+    fetch("/data/projects.json")
+      .then((res) => res.json())
+      .then(setProjects)
+      .catch((err) => {
+        console.error("Failed to load projects on Home:", err);
+        setProjects([]); // fallback
+      });
+  }, []);
+
 
   return (
     <div className="overflow-x-hidden">
