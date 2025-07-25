@@ -20,6 +20,15 @@ const fadeInUp = {
 const Projects = () => {
   const [selected, setSelected] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [projectData, setProjectData] = useState([]);
+
+  useEffect(() => {
+    fetch("/data/projects.json")
+      .then((res) => res.json())
+      .then(setProjectData)
+      .catch(console.error);
+  }, []);
+
 
   const handleSelect = (project) => {
     setIsMobile(window.innerWidth < 768);
