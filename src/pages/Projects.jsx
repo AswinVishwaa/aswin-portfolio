@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import Particles from "react-tsparticles";
 import { loadSlim } from "tsparticles-slim";
 import ProjectDrawer from "../components/ProjectDrawer";
-import projectData from "../data/projects.json";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 50 },
