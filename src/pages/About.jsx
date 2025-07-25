@@ -1,16 +1,23 @@
+import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import Particles from "react-tsparticles";
 import { loadSlim } from "tsparticles-slim";
-import { useCallback } from "react";
 import { Typewriter } from "react-simple-typewriter";
-import about from "../data/about.md?raw";
 
 const About = () => {
+  const [aboutText, setAboutText] = useState("");
   const initParticles = useCallback(async (engine) => {
     await loadSlim(engine);
   }, []);
 
-  const aboutParagraphs = about.split("\n\n");
+  useEffect(() => {
+    fetch("/data/about.md")
+      .then((res) => res.text())
+      .then(setAboutText)
+      .catch(console.error);
+  }, []);
+
+  const aboutParagraphs = aboutText.split("\n\n");
 
   return (
     <div className="overflow-x-hidden">
