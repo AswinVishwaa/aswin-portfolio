@@ -10,41 +10,57 @@ const AI = () => {
   const [loading, setLoading] = useState(false);
 
   const handleAsk = async () => {
-    if (!input.trim()) return;
+  if (!input.trim()) return;
 
-    setLoading(true);
-    setAnswer("");
+  setLoading(true);
+  setAnswer("");
 
-    try {
-      const res = await fetch("/api/ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: input }),
-      });
+  try {
+    const res = await fetch("/api/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: input }),
+    });
 
-      if (!res.ok || !res.body) {
-        throw new Error("Something went wrong");
-      }
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let done = false;
-      let fullText = "";
-
-      while (!done) {
-        const { value, done: doneReading } = await reader.read();
-        done = doneReading;
-        const chunk = decoder.decode(value);
-        fullText += chunk;
-        setAnswer(fullText);
-      }
-    } catch (err) {
-      console.error(err);
-      setAnswer("Oops! Something went wrong. Try again.");
-    } finally {
-      setLoading(false);
+    if (!res.ok || !res.body) {
+      throw new Error("Something went wrong");
     }
-  };
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = "";
+    let done = false;
+
+    while (!done) {
+      const { value, done: doneReading } = await reader.read();
+      done = doneReading;
+      const chunk = decoder.decode(value, { stream: true });
+
+      // ✅ Only stream actual text from chunks
+      const clean = chunk
+        .split("data:")
+        .filter((line) => line && !line.includes("[DONE]"))
+        .map((line) => {
+          try {
+            const parsed = JSON.parse(line.trim());
+            return parsed.choices?.[0]?.delta?.content || "";
+          } catch {
+            return "";
+          }
+        })
+        .join("");
+
+      fullText += clean;
+      setAnswer(fullText);
+    }
+  } catch (err) {
+    console.error(err);
+    setAnswer("Oops! Something went wrong. Try again.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const initParticles = useCallback(async (engine) => {
     await loadSlim(engine);
