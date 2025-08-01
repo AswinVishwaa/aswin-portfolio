@@ -3,14 +3,15 @@ export const config = {
 };
 
 import { pipeline } from "@xenova/transformers";
+import docs from "./data/docs.json"; // ✅ Direct import, no fetch needed
 
-// Helper: embed text
+// Embed helper
 const embedText = async (embedder, text) => {
   const output = await embedder(text, { pooling: "mean", normalize: true });
   return output.data;
 };
 
-// Helper: cosine similarity
+// Cosine similarity
 const cosineSimilarity = (vecA, vecB) => {
   const dot = vecA.reduce((sum, a, i) => sum + a * vecB[i], 0);
   const magA = Math.sqrt(vecA.reduce((sum, a) => sum + a * a, 0));
@@ -19,14 +20,13 @@ const cosineSimilarity = (vecA, vecB) => {
 };
 
 export default async function handler(req, res) {
-  console.log("🔧 Handler triggered:", req.method);
+  console.log("🔧 API /ask triggered:", req.method);
 
   if (req.method !== "POST") {
-    console.warn("🚫 Method not allowed:", req.method);
     return res.status(405).send("Method Not Allowed");
   }
 
-  // ✅ Manually parse request body (required in Vercel)
+  // Manually parse JSON body
   let rawBody = "";
   for await (const chunk of req) {
     rawBody += chunk;
@@ -36,44 +36,31 @@ export default async function handler(req, res) {
   try {
     bodyData = JSON.parse(rawBody);
   } catch (e) {
-    console.error("❌ Invalid JSON:", e);
-    return res.status(400).send("Bad Request: Invalid JSON");
+    console.error("❌ Invalid JSON body:", e);
+    return res.status(400).send("Bad JSON");
   }
 
   const { prompt } = bodyData || {};
   if (!prompt) {
-    console.error("⚠️ No prompt received.");
-    return res.status(400).send("Prompt is required.");
+    console.warn("⚠️ No prompt received");
+    return res.status(400).send("Prompt required");
   }
 
-  console.log("🟡 Prompt received:", prompt);
+  console.log("🟡 Prompt:", prompt);
 
   try {
-    const baseUrl =
-      process.env.VERCEL_ENV === "production"
-        ? `https://${process.env.VERCEL_URL}`
-        : "http://localhost:3000";
-
-    // 🔁 Load docs.json
-    const docsRes = await fetch(`${baseUrl}/data/docs.json`);
-    if (!docsRes.ok) {
-      console.error("❌ Failed to fetch docs.json");
-      return res.status(500).send("❌ Failed to load docs.json");
-    }
-
-    const docs = await docsRes.json();
     console.log(`📄 Loaded ${docs.length} documents`);
 
-    // 📦 Load embedder
-    console.log("📦 Loading embedding model...");
+    // Load embedding model
+    console.log("📦 Loading embedder...");
     const embedder = await pipeline("feature-extraction", "Xenova/all-MiniLM-L6-v2");
 
-    // 🔍 Embed texts
-    console.log("🔍 Embedding documents and prompt...");
+    // Embed documents and prompt
+    console.log("🔍 Embedding documents and query...");
     const docEmbeddings = await Promise.all(docs.map((doc) => embedText(embedder, doc)));
     const queryEmbedding = await embedText(embedder, prompt);
 
-    // 🔎 Match top 3 relevant docs
+    // Similarity & context
     const topDocs = docs
       .map((text, i) => ({
         text,
@@ -84,7 +71,7 @@ export default async function handler(req, res) {
       .map((d) => d.text)
       .join("\n");
 
-    console.log("🤖 Sending request to Groq...");
+    console.log("🤖 Sending to Groq...");
 
     const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
@@ -97,8 +84,7 @@ export default async function handler(req, res) {
         messages: [
           {
             role: "system",
-            content:
-              "You are a helpful assistant who answers questions based on portfolio context provided.",
+            content: "You are a helpful assistant who answers questions based on portfolio context provided.",
           },
           {
             role: "user",
@@ -111,12 +97,11 @@ export default async function handler(req, res) {
     });
 
     if (!groqRes.ok || !groqRes.body) {
-      const errText = await groqRes.text();
-      console.error("❌ Groq API error:", errText);
+      const errorText = await groqRes.text();
+      console.error("❌ Groq API error:", errorText);
       return res.status(500).send("❌ Failed to fetch from Groq");
     }
 
-    // ✅ Stream response
     console.log("📡 Streaming Groq response...");
     const reader = groqRes.body.getReader();
     const decoder = new TextDecoder();
@@ -137,10 +122,9 @@ export default async function handler(req, res) {
     }
 
     res.end();
-    console.log("✅ Stream completed successfully.");
-
+    console.log("✅ Stream completed.");
   } catch (err) {
-    console.error("🔥 Server crashed:", err);
-    res.status(500).send("❌ Internal Server Error");
+    console.error("🔥 Internal server error:", err);
+    res.status(500).send("❌ Internal error");
   }
 }
