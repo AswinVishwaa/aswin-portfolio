@@ -60,20 +60,20 @@
     "desc": "Single-page responsive website built with Bootstrap. Features anime info, watch links, questions, and merch buy options.",
     "tech": ["HTML", "CSS", "Bootstrap"],
     "image": "images/anime_web.jpg",
-    "link": "https://aswinvishwaa.github.io/project-1/"
+    "link": "https://aswinvishwaa.github.io/anime_merchant_frontend/"
   },
   {
     "title": "Interactive Portfolio with RAG Chatbot",
     "desc": "This very portfolio features a LangChain-powered chatbot that answers questions about my skills and projects using Groq + HuggingFace APIs.",
-    "tech": ["LangChain", "RAG", "React", "Vite", "Tailwind"],
+    "tech": ["RAG", "React", "Vite", "Tailwind"],
     "image": "images/portfolio.png",
-    "link": "#"
+    "link": "https://aswin-portfolio-one.vercel.app/"
   },
   {
   "title": "Doctor-Agent - LLM Appointment Assistant",
   "desc": "An AI-powered appointment and reporting system using LangChain + Groq. Features natural language scheduling, doctor dashboards, and Google Calendar integration.",
   "tech": ["FastAPI", "LangChain", "Groq", "Docker", "PostgreSQL", "React"],
-  "image":"",
-  "link":"#"
+  "image":"images/appointment_booking.png",
+  "link":"https://github.com/AswinVishwaa/doctor-agent.git"
 }
 ]
