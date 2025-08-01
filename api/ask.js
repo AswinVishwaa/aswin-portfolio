@@ -3,7 +3,7 @@ export const config = {
 };
 
 import { pipeline } from "@xenova/transformers";
-import docs from "./data/docs.json"; // ✅ Direct import, no fetch needed
+import docs from "./data/docs.json" assert { type: "json" };
 
 // Embed helper
 const embedText = async (embedder, text) => {
