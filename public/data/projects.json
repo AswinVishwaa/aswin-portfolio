@@ -68,5 +68,12 @@
     "tech": ["LangChain", "RAG", "React", "Vite", "Tailwind"],
     "image": "images/portfolio.png",
     "link": "#"
-  }
+  },
+  {
+  "title": "Doctor-Agent - LLM Appointment Assistant",
+  "desc": "An AI-powered appointment and reporting system using LangChain + Groq. Features natural language scheduling, doctor dashboards, and Google Calendar integration.",
+  "tech": ["FastAPI", "LangChain", "Groq", "Docker", "PostgreSQL", "React"],
+  "image":"",
+  "link":"#"
+}
 ]

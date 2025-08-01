@@ -1,23 +1,16 @@
 export const config = {
-  runtime: "edge",
+  runtime: "nodejs",
 };
 
-const HUGGINGFACE_API_URL = "https://api-inference.huggingface.co/embeddings/sentence-transformers/all-MiniLM-L6-v2";
+import { pipeline } from "@xenova/transformers";
 
-const embedText = async (text) => {
-  const res = await fetch(HUGGINGFACE_API_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${process.env.HF_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ inputs: text }),
-  });
-
-  if (!res.ok) throw new Error("Embedding API failed");
-  return await res.json();
+// Embedding helper
+const embedText = async (embedder, text) => {
+  const output = await embedder(text, { pooling: "mean", normalize: true });
+  return output.data;
 };
 
+// Cosine similarity
 const cosineSimilarity = (vecA, vecB) => {
   const dot = vecA.reduce((sum, a, i) => sum + a * vecB[i], 0);
   const magA = Math.sqrt(vecA.reduce((sum, a) => sum + a * a, 0));
@@ -25,34 +18,33 @@ const cosineSimilarity = (vecA, vecB) => {
   return dot / (magA * magB);
 };
 
-export default async function handler(req) {
+export default async function handler(req, res) {
   try {
-    const { prompt } = await req.json();
+    const { prompt } = req.body;
+    console.log("🟡 Prompt:", prompt);
 
-    const baseUrl = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : "http://localhost:3000";
+    const baseUrl =
+      process.env.VERCEL_ENV === "production"
+        ? `https://${process.env.VERCEL_URL}`
+        : "http://localhost:3000";
 
-    const [aboutRes, projectRes] = await Promise.all([
-      fetch(`${baseUrl}/data/about.md`),
-      fetch(`${baseUrl}/data/projects.json`),
-    ]);
-
-    if (!aboutRes.ok || !projectRes.ok) {
-      return new Response("❌ Failed to load data", { status: 500 });
+    // 🔁 Load docs.json
+    const docsRes = await fetch(`${baseUrl}/data/docs.json`);
+    if (!docsRes.ok) {
+      return res.status(500).send("❌ Failed to load docs.json");
     }
+    const docs = await docsRes.json();
+    console.log(`📄 Loaded ${docs.length} documents`);
 
-    const aboutText = await aboutRes.text();
-    const projects = await projectRes.json();
+    // Load embedding model
+    console.log("📦 Loading embedding model...");
+    const embedder = await pipeline("feature-extraction", "Xenova/all-MiniLM-L6-v2");
 
-    const docs = [
-      aboutText,
-      ...projects.map((p) => `${p.title}: ${p.desc}. Tech: ${p.tech.join(", ")}`),
-    ];
+    console.log("🔍 Embedding documents...");
+    const docEmbeddings = await Promise.all(docs.map((doc) => embedText(embedder, doc)));
+    const queryEmbedding = await embedText(embedder, prompt);
 
-    const docEmbeddings = await Promise.all(docs.map(embedText));
-    const queryEmbedding = await embedText(prompt);
-
+    // Match top documents
     const topDocs = docs
       .map((text, i) => ({
         text,
@@ -62,6 +54,8 @@ export default async function handler(req) {
       .slice(0, 3)
       .map((d) => d.text)
       .join("\n");
+
+    console.log("🤖 Sending context to Groq...");
 
     const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
@@ -88,19 +82,32 @@ export default async function handler(req) {
     });
 
     if (!groqRes.ok || !groqRes.body) {
-      return new Response("❌ Failed to fetch from Groq", { status: 500 });
+      const errText = await groqRes.text();
+      console.error("❌ Groq error:", errText);
+      return res.status(500).send("❌ Failed to fetch from Groq");
     }
 
-    return new Response(groqRes.body, {
-      headers: {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
-      },
-    });
+    // Stream Groq reply manually
+    const reader = groqRes.body.getReader();
+    const decoder = new TextDecoder();
+    let done = false;
+
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+
+    while (!done) {
+      const { value, done: readerDone } = await reader.read();
+      done = readerDone;
+      if (value) {
+        const chunk = decoder.decode(value);
+        res.write(chunk);
+        res.flush?.();
+      }
+    }
+    res.end();
   } catch (err) {
-    console.error("Error:", err);
-    return new Response("❌ Internal error", { status: 500 });
+    console.error("🔥 Internal error:", err);
+    res.status(500).send("❌ Internal error");
   }
 }
-
