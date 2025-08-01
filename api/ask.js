@@ -3,7 +3,12 @@ export const config = {
 };
 
 import { pipeline } from "@xenova/transformers";
-import docs from "./data/docs.json" assert { type: "json" };
+import { readFileSync } from "fs";
+import { join } from "path";
+
+
+const docsPath = join(process.cwd(), "api", "data", "docs.json");
+const docs = JSON.parse(readFileSync(docsPath, "utf-8"));
 
 // Embed helper
 const embedText = async (embedder, text) => {
