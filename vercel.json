@@ -1,9 +1,4 @@
 {
-  "functions": {
-    "api/ask.js": {
-      "runtime": "vercel-nodejs@3.0.0"
-    }
-  },
   "routes": [
     {
       "src": "/api/ask",
