@@ -13,7 +13,7 @@
   },
   {
     "title": "AI Brain Tumor Radiotherapy Pipeline",
-    "desc": "End-to-end multimodal AI system for GBM radiotherapy planning on BraTS2020. 3D UNet (Dice WT=0.929) + MedGemma 1.5 radiology reports + LangChain RAG clinical agent + GPU-accelerated GTV/CTV/PTV contouring on dual Tesla T4 GPUs. 50× faster than CPU baseline.",
+    "desc": "End-to-end multimodal AI system for GBM radiotherapy planning on BraTS2020. 3D UNet (Dice WT=0.929) + MedGemma 1.5 radiology reports + LangChain RAG clinical agent + GPU-accelerated GTV/CTV/PTV contouring on dual Tesla T4 GPUs. 50× faster than CPU baseline. [Private Repo]",
     "tech": [
       "PyTorch",
       "3D UNet",
@@ -22,19 +22,19 @@
       "FAISS",
       "MONAI"
     ],
-    "image": "images/brain_tumor.jpg",
+    "image": "images/brain_tumor.jpeg",
     "link": "#"
   },
   {
     "title": "Smart Email Assistant",
-    "desc": "LLM-powered assistant that fetches and summarizes Gmail inboxes, then sends key alerts via WhatsApp using Twilio. [Private Repo]",
+    "desc": "LLM-powered assistant that fetches and summarizes Gmail inboxes, then sends key alerts via WhatsApp using Twilio.",
     "tech": [
       "Groq",
       "Gmail API",
       "Twilio"
     ],
     "image": "images/email.jpg",
-    "link": "#"
+    "link": "https://github.com/AswinVishwaa/SmartEmailRemainder.git"
   },
   {
     "title": "Doctor-Agent — LLM Appointment Assistant",
