@@ -1,7 +1,6 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import Particles from "react-tsparticles";
-import { loadSlim } from "tsparticles-slim";
+import ParticlesBackground from "../components/ParticlesBackground";
 import ProjectDrawer from "../components/ProjectDrawer";
 
 const fadeInUp = {
@@ -30,9 +29,16 @@ const Projects = () => {
 
 
   const handleSelect = (project) => {
-    setIsMobile(window.innerWidth < 768);
     setSelected(project);
   };
+
+  // ✅ Responsive isMobile — updates on resize, not just on click
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   useEffect(() => {
     const handleKey = (e) => {
@@ -42,28 +48,9 @@ const Projects = () => {
     return () => window.removeEventListener("keydown", handleKey);
   }, []);
 
-  const initParticles = useCallback(async (engine) => {
-    await loadSlim(engine);
-  }, []);
-
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-[#0f0f0f] to-[#1c1c1c] text-white">
-      {/* Particle background */}
-      <Particles
-        className="absolute inset-0 z-0"
-        init={initParticles}
-        options={{
-          fullScreen: false,
-          particles: {
-            color: { value: "#ffffff" },
-            links: { enable: true, distance: 120, opacity: 0.1 },
-            move: { enable: true, speed: 0.3 },
-            number: { value: 35 },
-            opacity: { value: 0.15 },
-            size: { value: 1.5 },
-          },
-        }}
-      />
+      <ParticlesBackground id="tsparticles-projects" count={35} speed={0.3} opacity={0.15} />
 
       {/* Heading */}
       <motion.div
@@ -80,7 +67,7 @@ const Projects = () => {
       </motion.div>
 
       {/* Cards Container with Perspective */}
-      <div 
+      <div
         className="relative z-10 px-4 max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pb-20"
         style={{ perspective: "1000px" }}
       >

@@ -3,6 +3,10 @@
     {
       "src": "/api/ask",
       "dest": "api/ask.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }

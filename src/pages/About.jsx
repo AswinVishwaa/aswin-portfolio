@@ -1,14 +1,10 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import Particles from "react-tsparticles";
-import { loadSlim } from "tsparticles-slim";
 import { Typewriter } from "react-simple-typewriter";
+import ParticlesBackground from "../components/ParticlesBackground";
 
 const About = () => {
   const [aboutText, setAboutText] = useState("");
-  const initParticles = useCallback(async (engine) => {
-    await loadSlim(engine);
-  }, []);
 
   useEffect(() => {
     fetch("/data/about.md")
@@ -22,23 +18,7 @@ const About = () => {
   return (
     <div className="overflow-x-hidden">
       <section className="relative min-h-screen flex flex-col justify-center items-center text-center px-4 bg-gradient-to-br from-[#0f0f0f] to-[#1c1c1c] text-white">
-        {/* Particle Background */}
-        <Particles
-          className="absolute inset-0 z-0"
-          id="tsparticles-about"
-          init={initParticles}
-          options={{
-            fullScreen: false,
-            particles: {
-              color: { value: "#ffffff" },
-              links: { enable: true, distance: 130, opacity: 0.15 },
-              move: { enable: true, speed: 0.4 },
-              number: { value: 45 },
-              opacity: { value: 0.2 },
-              size: { value: 1.5 },
-            },
-          }}
-        />
+        <ParticlesBackground id="tsparticles-about" count={45} speed={0.4} opacity={0.2} />
 
         {/* Foreground Content */}
         <motion.div

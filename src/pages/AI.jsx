@@ -1,8 +1,7 @@
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Typewriter } from "react-simple-typewriter";
-import Particles from "react-tsparticles";
-import { loadSlim } from "tsparticles-slim";
+import ParticlesBackground from "../components/ParticlesBackground";
 
 const AI = () => {
   const [input, setInput] = useState("");
@@ -10,80 +9,61 @@ const AI = () => {
   const [loading, setLoading] = useState(false);
 
   const handleAsk = async () => {
-  if (!input.trim()) return;
+    if (!input.trim()) return;
 
-  setLoading(true);
-  setAnswer("");
+    setLoading(true);
+    setAnswer("");
 
-  try {
-    const res = await fetch("/api/ask", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt: input }),
-    });
+    try {
+      const res = await fetch("/api/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: input }),
+      });
 
-    if (!res.ok || !res.body) {
-      throw new Error("Something went wrong");
+      if (!res.ok || !res.body) {
+        throw new Error("Something went wrong");
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let fullText = "";
+      let done = false;
+
+      while (!done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        const chunk = decoder.decode(value, { stream: true });
+
+        // ✅ Only stream actual text from chunks
+        const clean = chunk
+          .split("data:")
+          .filter((line) => line && !line.includes("[DONE]"))
+          .map((line) => {
+            try {
+              const parsed = JSON.parse(line.trim());
+              return parsed.choices?.[0]?.delta?.content || "";
+            } catch {
+              return "";
+            }
+          })
+          .join("");
+
+        fullText += clean;
+        setAnswer(fullText);
+      }
+    } catch (err) {
+      console.error(err);
+      setAnswer("Oops! Something went wrong. Try again.");
+    } finally {
+      setLoading(false);
     }
+  };
 
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let fullText = "";
-    let done = false;
-
-    while (!done) {
-      const { value, done: doneReading } = await reader.read();
-      done = doneReading;
-      const chunk = decoder.decode(value, { stream: true });
-
-      // ✅ Only stream actual text from chunks
-      const clean = chunk
-        .split("data:")
-        .filter((line) => line && !line.includes("[DONE]"))
-        .map((line) => {
-          try {
-            const parsed = JSON.parse(line.trim());
-            return parsed.choices?.[0]?.delta?.content || "";
-          } catch {
-            return "";
-          }
-        })
-        .join("");
-
-      fullText += clean;
-      setAnswer(fullText);
-    }
-  } catch (err) {
-    console.error(err);
-    setAnswer("Oops! Something went wrong. Try again.");
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-  const initParticles = useCallback(async (engine) => {
-    await loadSlim(engine);
-  }, []);
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-[#0f0f0f] to-[#1c1c1c] text-white">
-      {/* Particle Background */}
-      <Particles
-        className="absolute inset-0 z-0"
-        init={initParticles}
-        options={{
-          fullScreen: false,
-          particles: {
-            color: { value: "#ffffff" },
-            links: { enable: true, distance: 120, opacity: 0.1 },
-            move: { enable: true, speed: 0.3 },
-            number: { value: 35 },
-            opacity: { value: 0.15 },
-            size: { value: 1.5 },
-          },
-        }}
-      />
+      <ParticlesBackground id="tsparticles-ai" count={35} speed={0.3} opacity={0.15} />
 
       {/* Main Content */}
       <div className="relative z-10 flex flex-col justify-center items-center text-center px-4 max-w-2xl mx-auto pt-32">
