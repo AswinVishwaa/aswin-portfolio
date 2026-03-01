@@ -73,21 +73,32 @@ const About = () => {
         </div>
       </section>
 
-      {/* ── Bio ──────────────────────────────────────── */}
+      {/* ── Bio as structured bullet points ────────────── */}
       <section className="max-w-3xl mx-auto px-4 py-16">
         <h2 className="text-2xl font-bold text-black mb-8 text-center">The Full Story</h2>
-        <div className="space-y-4">
-          {aboutText.split("\n\n").map((para, i) => (
-            <motion.p
+        <div className="space-y-5 text-sm sm:text-base">
+          {[
+            { bold: "Current role:", text: "Software Engineer at Dobbe AI (Aug 2025–present) — building backend systems, event logging, analytics pipelines, and a C#/.NET medical imaging agent across 7+ months." },
+            { bold: "Freelancing:", text: "Building an end-to-end AI Brain Tumor Radiotherapy Planning Pipeline — 3D UNet (Dice WT=0.929) + MedGemma 1.5 + LangChain RAG + GPU-accelerated GTV/CTV/PTV contouring on dual Tesla T4s." },
+            { bold: "Biggest win:", text: "Won ₹10 Lakh grant from Titan Nest / IIM Calcutta and ₹30K cash prize at Startup Mania 9.0 for the Glaucoma Detection AI (UNet + YOLOv9)." },
+            { bold: "Published researcher:", text: "Research paper published at ICCCNT 2025 (IEEE, IIT Indore) covering Glaucoma Detection methodology and clinical validation." },
+            { bold: "What I build:", text: "Medical AI pipelines, LLM-powered tools, production backend infrastructure, and full-stack web apps. I bridge deep research with real-world product impact." },
+            { bold: "How I work:", text: "Speed-first, proof-of-concept driven. I jump into new tech under pressure and deliver — Docker, FastAPI, C#/.NET, binary parsing — all learned on the job." },
+            { bold: "Education:", text: "Pursuing B.Tech in AI/ML Engineering, actively building real-world systems in parallel with academics." },
+          ].map(({ bold, text }, i) => (
+            <motion.div
               key={i}
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
+              initial={{ opacity: 0, x: -12 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ delay: i * 0.08 }}
               viewport={{ once: true }}
-              className="text-gray-700 leading-relaxed text-sm sm:text-base"
+              className="flex gap-3 items-start"
             >
-              {para}
-            </motion.p>
+              <span className="text-black mt-1.5 flex-shrink-0">▸</span>
+              <p className="text-gray-700 leading-relaxed">
+                <strong className="text-black font-semibold">{bold}</strong>{" "}{text}
+              </p>
+            </motion.div>
           ))}
         </div>
       </section>

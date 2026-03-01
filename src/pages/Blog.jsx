@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { createPortal } from "react-dom";
 import ParticlesBackground from "../components/ParticlesBackground";
 
 // ─── Helpers ────────────────────────────────────────────────
@@ -34,45 +35,46 @@ const renderContent = (text) =>
     )
   );
 
-// ─── Split Modal ─────────────────────────────────────────────
-const SplitModal = ({ post, onClose }) => (
-  <AnimatePresence>
-    {post && (
-      <>
-        {/* Backdrop */}
-        <motion.div
-          className="fixed inset-0 z-[98] bg-black/75 backdrop-blur-sm"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-        />
+// ─── Split Modal (Portal) ────────────────────────────────────
+// Renders into document.body to escape any ancestor transform stacking context
+const SplitModal = ({ post, onClose }) => {
+  if (!post) return null;
 
-        {/* Modal */}
+  return createPortal(
+    <AnimatePresence>
+      <motion.div
+        key="split-backdrop"
+        className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+        style={{ backgroundColor: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)" }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+      >
         <motion.div
-          className="fixed z-[99] inset-4 sm:inset-auto sm:top-1/2 sm:left-1/2
-            sm:w-[800px] sm:max-w-[90vw] sm:max-h-[85vh]
-            sm:-translate-x-1/2 sm:-translate-y-1/2
-            bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col sm:flex-row"
+          key="split-modal"
+          className="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col sm:flex-row
+            w-full max-w-3xl max-h-[85vh]"
           initial={{ opacity: 0, scale: 0.93, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.93, y: 20 }}
-          transition={{ type: "spring", damping: 26, stiffness: 260 }}
+          transition={{ type: "spring", damping: 28, stiffness: 280 }}
+          onClick={(e) => e.stopPropagation()}
         >
           {/* Left — image panel */}
-          <div className="sm:w-[42%] flex-shrink-0 bg-gray-50 flex items-center justify-center p-8 border-b sm:border-b-0 sm:border-r border-gray-100 min-h-[200px] sm:min-h-0">
+          <div className="sm:w-[40%] flex-shrink-0 bg-gray-50 flex items-center justify-center
+            p-8 border-b sm:border-b-0 sm:border-r border-gray-100 min-h-[200px]">
             <img
               src={post.image}
               alt={post.title}
               data-slug={post.slug}
               onError={handleImgError}
-              className="max-w-full max-h-[220px] sm:max-h-[340px] object-contain rounded-lg"
+              className="max-w-full max-h-[220px] sm:max-h-[320px] object-contain rounded-lg"
             />
           </div>
 
           {/* Right — detail panel */}
           <div className="flex-1 overflow-y-auto p-6 sm:p-8 flex flex-col">
-            {/* Close */}
             <div className="flex justify-end mb-4">
               <button
                 onClick={onClose}
@@ -93,10 +95,11 @@ const SplitModal = ({ post, onClose }) => (
             </div>
           </div>
         </motion.div>
-      </>
-    )}
-  </AnimatePresence>
-);
+      </motion.div>
+    </AnimatePresence>,
+    document.body
+  );
+};
 
 // ─── Podium Card ─────────────────────────────────────────────
 const PodiumCard = ({ post, rank, onClick, className = "" }) => {

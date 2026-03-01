@@ -228,7 +228,7 @@ const Experience = () => (
         >
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
-                    { label: "Commits (months)", value: "7+" },
+                    { label: "Work Duration", value: "7+ Mo." },
                     { label: "Grant Funding", value: "₹10L" },
                     { label: "Awards Won", value: "4+" },
                     { label: "Active Branches", value: "3" },

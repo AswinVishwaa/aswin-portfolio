@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { createPortal } from "react-dom";
 
 const parseFrontmatter = (raw) => {
     const titleMatch = raw.match(/title:\s*(.+)/);
@@ -10,6 +11,62 @@ const parseFrontmatter = (raw) => {
     const parts = raw.split("---");
     const content = parts.length >= 3 ? parts.slice(2).join("---").trim() : raw.trim();
     return { title, priority, content };
+};
+
+// ── Portal Modal — rendered directly into document.body to
+//    escape any ancestor CSS transform stacking context ──────
+const CenteredModal = ({ selected, onClose, onSeeAll }) => {
+    if (!selected) return null;
+
+    return createPortal(
+        <AnimatePresence>
+            <motion.div
+                key="backdrop"
+                className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+                style={{ backgroundColor: "rgba(0,0,0,0.65)" }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={onClose}
+            >
+                <motion.div
+                    key="modal"
+                    className="bg-white text-black rounded-2xl shadow-2xl w-full max-w-lg max-h-[80vh] overflow-y-auto"
+                    initial={{ scale: 0.9, opacity: 0, y: 24 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    exit={{ scale: 0.9, opacity: 0, y: 24 }}
+                    transition={{ type: "spring", damping: 28, stiffness: 300 }}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <div className="p-6">
+                        <div className="flex justify-between items-start mb-4 gap-3">
+                            <h3 className="text-xl font-bold leading-snug">{selected.title}</h3>
+                            <div className="flex gap-3 flex-shrink-0 items-center">
+                                <button
+                                    onClick={onSeeAll}
+                                    className="text-gray-500 hover:text-black text-sm font-medium underline"
+                                >
+                                    See All
+                                </button>
+                                <button
+                                    onClick={onClose}
+                                    className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200
+                    flex items-center justify-center text-gray-500 hover:text-black text-sm transition-colors"
+                                    aria-label="Close"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        </div>
+                        <div className="text-gray-700 whitespace-pre-line text-sm leading-relaxed">
+                            {selected.content}
+                        </div>
+                    </div>
+                </motion.div>
+            </motion.div>
+        </AnimatePresence>,
+        document.body
+    );
 };
 
 const BlogPreview = () => {
@@ -33,6 +90,7 @@ const BlogPreview = () => {
         loadPosts();
     }, []);
 
+    // Scroll lock + Escape key
     useEffect(() => {
         const handleEsc = (e) => { if (e.key === "Escape") setSelected(null); };
         document.body.style.overflow = selected ? "hidden" : "";
@@ -46,7 +104,7 @@ const BlogPreview = () => {
     if (posts.length === 0) return null;
 
     return (
-        <section className="py-16 px-4 max-w-4xl mx-auto relative z-10">
+        <section className="py-16 px-4 max-w-4xl mx-auto">
             <h2 className="text-2xl font-bold text-center mb-6 text-black">Latest Posts</h2>
 
             <div className="grid gap-6 sm:grid-cols-2">
@@ -69,59 +127,14 @@ const BlogPreview = () => {
                 ))}
             </div>
 
-            {/* ── Centered Modal ── */}
-            <AnimatePresence>
-                {selected && (
-                    <>
-                        {/* Backdrop */}
-                        <motion.div
-                            className="fixed inset-0 bg-black/60 z-[99] flex items-center justify-center p-4"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => setSelected(null)}
-                        >
-                            {/* Modal — stopPropagation so clicking inside doesn't close */}
-                            <motion.div
-                                className="bg-white text-black z-[100] rounded-2xl shadow-2xl
-                  w-full max-w-lg max-h-[80vh] overflow-y-auto"
-                                initial={{ scale: 0.92, opacity: 0, y: 20 }}
-                                animate={{ scale: 1, opacity: 1, y: 0 }}
-                                exit={{ scale: 0.92, opacity: 0, y: 20 }}
-                                transition={{ type: "spring", damping: 26, stiffness: 280 }}
-                                onClick={(e) => e.stopPropagation()}
-                            >
-                                <div className="p-6">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <h3 className="text-xl font-bold pr-4">{selected.title}</h3>
-                                        <div className="flex gap-3 flex-shrink-0">
-                                            <button
-                                                onClick={() => navigate("/blog")}
-                                                className="text-gray-500 hover:text-black text-sm font-medium underline"
-                                            >
-                                                See All
-                                            </button>
-                                            <button
-                                                onClick={() => setSelected(null)}
-                                                className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200
-                          flex items-center justify-center text-gray-500 hover:text-black text-sm transition-colors"
-                                                aria-label="Close"
-                                            >
-                                                ✕
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div className="text-gray-700 whitespace-pre-line text-sm leading-relaxed">
-                                        {selected.content}
-                                    </div>
-                                </div>
-                            </motion.div>
-                        </motion.div>
-                    </>
-                )}
-            </AnimatePresence>
+            {/* Portal-based centered modal — escapes any ancestor transform */}
+            <CenteredModal
+                selected={selected}
+                onClose={() => setSelected(null)}
+                onSeeAll={() => navigate("/blog")}
+            />
 
-            {/* ── Explore All Posts button ── */}
+            {/* Explore All Posts button */}
             <motion.div
                 className="flex justify-center mt-10"
                 initial={{ opacity: 0, y: 16 }}
