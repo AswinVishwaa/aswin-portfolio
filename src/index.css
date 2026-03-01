@@ -1,11 +1,35 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  /* ── Fix white overscroll/rubber-band canvas ── */
+  html,
+  body {
+    background-color: #0f0f0f;
+    color: #ffffff;
+    min-height: 100%;
+    overscroll-behavior: none;
+  }
+
+  #root {
+    min-height: 100vh;
+  }
+}
+
 @layer utilities {
   .preserve-3d {
     transform-style: preserve-3d;
   }
   .backface-hidden {
     backface-visibility: hidden;
+  }
+  /* Hide scrollbar but keep scroll behaviour */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }

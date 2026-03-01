@@ -2,16 +2,11 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
-/**
- * Parses frontmatter from raw markdown text.
- * Extracts `title` and `priority` fields.
- */
 const parseFrontmatter = (raw) => {
     const titleMatch = raw.match(/title:\s*(.+)/);
     const priorityMatch = raw.match(/priority:\s*(\d+)/);
     const title = titleMatch ? titleMatch[1].trim() : "Untitled";
     const priority = priorityMatch ? parseInt(priorityMatch[1]) : 999;
-    // Content is everything after the closing ---
     const parts = raw.split("---");
     const content = parts.length >= 3 ? parts.slice(2).join("---").trim() : raw.trim();
     return { title, priority, content };
@@ -24,9 +19,7 @@ const BlogPreview = () => {
     const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
-        // ✅ Use ?raw query to bypass vite-plugin-md transformation
         const files = import.meta.glob("../blog/*.md", { query: "?raw", import: "default" });
-
         const loadPosts = async () => {
             const entries = Object.entries(files);
             const loaded = await Promise.all(
@@ -35,11 +28,9 @@ const BlogPreview = () => {
                     return parseFrontmatter(raw);
                 })
             );
-            // Sort by ascending priority (1 = highest) then show top 2
             const sorted = loaded.sort((a, b) => a.priority - b.priority);
             setPosts(sorted.slice(0, 2));
         };
-
         loadPosts();
     }, []);
 
@@ -51,9 +42,7 @@ const BlogPreview = () => {
     }, []);
 
     useEffect(() => {
-        const handleEsc = (e) => {
-            if (e.key === "Escape") setSelected(null);
-        };
+        const handleEsc = (e) => { if (e.key === "Escape") setSelected(null); };
         document.body.style.overflow = selected ? "hidden" : "";
         window.addEventListener("keydown", handleEsc);
         return () => {
@@ -67,6 +56,7 @@ const BlogPreview = () => {
     return (
         <section className="py-16 px-4 max-w-4xl mx-auto relative z-10">
             <h2 className="text-2xl font-bold text-center mb-6">Latest Posts</h2>
+
             <div className="grid gap-6 sm:grid-cols-2">
                 {posts.map((post, i) => (
                     <motion.div
@@ -137,6 +127,26 @@ const BlogPreview = () => {
                     </>
                 )}
             </AnimatePresence>
+
+            {/* ── Explore All Posts button ── */}
+            <motion.div
+                className="flex justify-center mt-10"
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                viewport={{ once: true }}
+            >
+                <button
+                    onClick={() => navigate("/blog")}
+                    className="group inline-flex items-center gap-2 border border-gray-300 bg-white text-black
+            px-7 py-3 rounded-full font-semibold text-sm transition-all duration-300
+            hover:bg-black hover:text-white hover:border-black
+            hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] hover:scale-105 hover:translate-y-[-2px]"
+                >
+                    <span>Explore All Posts</span>
+                    <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+                </button>
+            </motion.div>
         </section>
     );
 };
