@@ -1,0 +1,183 @@
+Over the last 7 months, I’ve worked across backend development, data pipelines, event logging, and system-level engineering. My work involved both cloud and on-premise setups, real-time monitoring, and direct deployments at client sites.
+
+Backend & Logging Infrastructure:
+ - Built and integrated 53+ event logs (login, uploads, pipeline events, button triggers).
+ - Added PostgreSQL logging extensions and pushed logs to Wazuh via custom decoders and rules.
+ - Designed monitoring dashboards and automated email alerting for critical events.
+ - Regular Git workflows: PRs, merge conflict resolution, branch cleanups.
+
+Analytics & Event Tracking:
+ - Implemented 150+ Mixpanel tracking events across the frontend.
+ - Built beginner-level funnels and insights for user behavior analysis.
+.NET / MSI Installer Work:
+ - Worked on a C#/.NET MSI agent that monitors local folders and uploads supported files (.dcm, .ixr, .ioss).
+ - Reverse-engineered binary formats to extract metadata, convert to PNG, and map to backend structures.
+ - Extended backend endpoints to handle metadata extraction, preprocessing, and bucket storage mapping.
+ - Downgraded MSI from .NET 9.0 to 4.8 to support Windows 7+, and added support for both 32-bit & 64-bit systems.
+
+System Deployment & Client Support:
+ - Installed and configured MSI and Wazuh agents on clinic systems.
+ - Debugged real-time issues directly at client locations and patched installer logic.
+ - Built new dashboards, maintained Wazuh alert pipelines, and solved server-side log inconsistencies.
+
+Database & Reporting:
+
+ - Ran daily SQL queries (via pgAdmin & SSH access) to track image counts, metadata consistency, and DB health.
+ - Prepared summary sheets and automated partial tracking workflows.
+
+Architecture & Optimization:
+ - Helped restructure agent–server architecture after backend upgrades.
+ - Currently researching dynamic core/memory allocation to reduce load on processing servers.
+
+
+in details 
+
+I have joined the dobbe-ai in august 5 2025 ( add role I don't know whats this role here update the role for every 1 month or parts)
+first month my task is to add logs for all the events in the exisiting website both frontend(reactjs) and backend(nodejs) add logs to the database pg_extensino add logs to the dobbe agent(c# msi) and route all the logs to the wazuh wehere I write custom rules and decoder and create visualization and create alerts everything in my first month 
+and in the September 
+I worked with mixapnnel and meta ad setup in same way added event in frontend and backedn and created visuals report funnels boards in the mixpannel
+and In october I have entered into the dobbe agent which is msi using c#/.netframework I have understand the dobbe agent and worked with software development introuding new format support and all
+in November in dobbe I worked with binary files to convert those binary to xray images and hex files to get patient information lot of different pattern files and converted and add all the different different support to the dobbe agent. 
+in December - refactored the whole system architecture for efficient working of the dobbe agent optimized
+in January - proted the logisc and setup the dobbe agent to support win7 and 32 bit as well as 64 bit 
+in feburary - started working on fast api backedn refactoring whole website backend refactoring for efficient way of stroing ai output and have source tbale and orgainze the table input to reduce the latency and increase the accuracy.
+in march still going on...
+
+
+and another job which Is 
+
+from October 2025 frellancing
+
+working with multimodel agentic ai flow will be 
+
+# AI-Powered Brain Tumor Radiotherapy Planning Pipeline
+*End-to-End Multimodal System: Segmentation → Clinical Report → RT Contouring*  
+**Dataset:** BraTS2020 | **Compute:** Kaggle 2× Tesla T4 | **Year:** 2025–2026
+
+---
+
+## 1. Project Overview
+
+Built a fully automated, end-to-end AI pipeline for brain tumor radiotherapy planning on the BraTS2020 dataset. One of the first systems to integrate deep learning segmentation, multimodal large language model reporting, retrieval-augmented generation (RAG) clinical guidance, and automated GTV/CTV/PTV contouring into a single unified framework — running on dual-GPU commodity hardware (2× Tesla T4, 29.2GB total VRAM).
+
+**Four-stage architecture:**
+
+1. **3D UNet** — segments whole tumor (WT), tumor core (TC), and enhancing tumor (ET) from multi-modal MRI (T1, T1CE, T2, FLAIR)
+2. **MedGemma 1.5** — generates structured clinical radiology reports from segmentation outputs and T1-CE images
+3. **RAG Clinical Guidance Agent** — Llama-3 + FAISS hybrid retrieval grounded in ESTRO-EANO 2023 published guidelines
+4. **GTV/CTV/PTV Contouring** — GPU-accelerated 3D morphological operations implementing two validated clinical protocols with brain-boundary constraints
+
+---
+
+## 2. What I Built
+
+### 2.1 Tumor Segmentation — 3D UNet
+- Custom 3D UNet with MONAI sliding-window inference over full 240×240×155 NIfTI volumes
+- Multi-class output: NCR (label 1), Edema (label 2), Enhancing Tumor (label 3)
+- Pre-trained checkpoint (epoch 80, mean Dice 0.8136) deployed on `cuda:1`
+- **Dice WT=0.9288, TC=0.8748, ET=0.8876** — competitive with published BraTS SOTA
+
+### 2.2 Clinical Report Generation — MedGemma 1.5
+- Integrated Google's MedGemma 1.5 (4B-IT), a medical vision-language model built on Gemma 3
+- Correct Gemma 3 chat template: `apply_chat_template()` with structured messages list and PIL image — not raw `<image>` token strings
+- Runs in `bfloat16` on `cuda:0`; input_len slicing to decode only newly generated tokens
+- GPU memory management: `torch.cuda.synchronize()` + `empty_cache()` + `max_new_tokens=256` before generation
+
+### 2.3 Clinical Guidance Agent — RAG Pipeline
+- Llama-3 4-bit quantized (BitsAndBytes QLoRA) as generator LLM on `cuda:0`
+- Hybrid retrieval: FAISS dense vector search (BGE embeddings) + BM25 sparse retrieval via `EnsembleRetriever`
+- Cross-encoder reranker for top-k document selection before LLM context injection
+- Knowledge base: 370 pages of ESTRO-EANO 2023 + RTOG protocol guidelines via `PyPDFLoader` + `RecursiveCharacterTextSplitter`
+- LangChain `RetrievalQA` chain with custom `PromptTemplate` for structured RT recommendations
+
+### 2.4 GTV/CTV/PTV Contouring — Dual Protocol
+- **ESTRO-EANO 2023:** GTV (ET+NCR) → 15mm CTV → 3mm PTV (single phase, 60Gy/30fx + temozolomide)
+- **RTOG dual-phase:** GTV+edema → 20mm CTV46 (46Gy) + GTV → 20mm CTV60 (60Gy) → 3mm PTVs
+- GPU-accelerated 3D dilation using `torch.nn.functional.max_pool3d` on `cuda:1` (~50× faster than scipy CPU)
+- Brain boundary masking via T1CE intensity threshold + `scipy.ndimage.binary_fill_holes` to clip contours at skull
+- Clinical visualization: contour outlines via `skimage.measure.find_contours` overlaid on T1-CE MRI with combined overlay panel
+
+---
+
+## 3. Performance Metrics
+
+| Metric | Value | Clinical Significance |
+|---|---|---|
+| Dice WT (Whole Tumor) | 0.9288 | Excellent — matches top BraTS leaderboard entries |
+| Dice TC (Tumor Core) | 0.8748 | Strong core delineation for GTV definition |
+| Dice ET (Enhancing) | 0.8876 | Critical for T1-CE based GTV — clinically actionable |
+| HD95 (Whole Tumor) | 32.03 mm | Hausdorff distance; acceptable for clinical planning |
+| GTV Volume (ESTRO) | ~54 cc | Clinically realistic for GBM grade IV |
+| CTV Volume (ESTRO) | ~300 cc | After brain-boundary constraint with 15mm margin |
+| GPU Dilation Speed | Seconds | vs ~10 min CPU scipy baseline — 50× speedup |
+
+---
+
+## 4. Technology Stack
+
+| Category | Technology | Purpose |
+|---|---|---|
+| **Deep Learning** | PyTorch 2.5.1 + CUDA 12.4 | Core DL framework; multi-GPU device management |
+| | MONAI 1.4.0 | Sliding-window 3D inference for volumetric MRI |
+| | Custom 3D UNet | Encoder-decoder for BraTS multi-class segmentation |
+| **LLMs & VLMs** | MedGemma 1.5 (4B-IT) | Medical VLM for radiology report generation |
+| | Llama-3 (4-bit QLoRA) | RAG generator LLM for guideline-grounded recommendations |
+| | HuggingFace Transformers 4.50 | Model loading, tokenization, `apply_chat_template` |
+| | BitsAndBytes 0.45 | 4-bit quantization to fit Llama-3 in T4 VRAM |
+| | Accelerate 1.3.0 | Multi-GPU placement and memory management |
+| **RAG Pipeline** | LangChain + LangChain-HF | RetrievalQA chain and prompt templates |
+| | FAISS-GPU | Dense vector similarity search over guideline embeddings |
+| | BGE Embeddings | Sentence-transformer embeddings for semantic retrieval |
+| | BM25Retriever | Sparse keyword retrieval; combined via EnsembleRetriever |
+| | CrossEncoder Reranker | Re-ranks documents for highest relevance before LLM |
+| **Medical Imaging** | NiBabel 5.3.2 | NIfTI `.nii/.nii.gz` volume loading for BraTS2020 |
+| | SciPy + scikit-image | Morphological ops, HD95, contour extraction |
+| | OpenCV + Pillow | MRI slice preprocessing and PIL image for MedGemma |
+| **Clinical Standards** | ESTRO-EANO 2023 | Single-phase GBM: 15mm CTV, 3mm PTV, 60Gy/30fx |
+| | RTOG Dual-Phase | CTV46/CTV60 with edema-inclusive initial phase |
+| | BraTS2020 Labels | NCR=1, Edema=2, ET=3 mapped to GTV subregions |
+| **Infrastructure** | Kaggle 2× Tesla T4 | Free dual-GPU; cuda:0 for LLMs, cuda:1 for UNet |
+| | Python 3.12 | Primary language |
+| | Matplotlib + NumPy | Clinical visualization and numerical operations |
+
+---
+
+## 5. Portfolio & Experience Write-Ups
+
+### Project Card (GitHub / Portfolio Site)
+
+**AI Radiotherapy Planning Pipeline — Brain Tumor Contouring System**
+
+Built a full end-to-end multimodal AI system for automated glioblastoma radiotherapy planning on BraTS2020. The pipeline integrates a custom 3D UNet (Dice WT=0.929), MedGemma 1.5 for clinical report generation, a RAG-based clinical guidance agent using Llama-3 and FAISS hybrid retrieval grounded in ESTRO-EANO 2023 guidelines, and GPU-accelerated GTV/CTV/PTV contouring implementing both ESTRO-EANO single-phase and RTOG dual-phase radiotherapy protocols. Deployed on dual Tesla T4 GPUs with strategic memory partitioning to run all components simultaneously within 29GB total VRAM.
+
+`PyTorch` `UNet` `MedGemma` `Llama-3` `RAG` `FAISS` `LangChain` `MONAI` `BraTS2020` `ESTRO-EANO`
+
+---
+
+### Experience Section (Resume / Internship Application)
+
+**AI Research Engineer — Brain Tumor Radiotherapy Planning Pipeline**
+
+- Trained and deployed a 3D UNet achieving Dice WT=0.929, TC=0.875, ET=0.888 on BraTS2020 multi-modal MRI volumes using MONAI sliding-window inference
+- Integrated MedGemma 1.5 (Google's medical VLM) using correct Gemma 3 `apply_chat_template` format for automated radiology report generation from T1-CE MRI
+- Engineered a hybrid RAG pipeline combining FAISS dense retrieval, BM25 sparse retrieval, and cross-encoder reranking over 370 pages of clinical RT guidelines
+- Implemented clinically validated GTV/CTV/PTV margin algorithms per ESTRO-EANO 2023 and RTOG protocols; achieved 50× speedup over CPU baseline via GPU-accelerated `max_pool3d` dilation
+- Managed dual-GPU memory allocation across 2× T4 GPUs (29.2GB) to simultaneously host UNet, MedGemma 1.5, and Llama-3 4-bit quantized models without OOM errors
+- Produced clinical-grade RT contour visualizations with anatomical brain-boundary constraints matching radiation oncology software conventions
+
+---
+
+## 6. What Makes This Research-Worthy
+
+- First pipeline to combine BraTS segmentation + medical VLM reporting + RAG guideline agent + automated RT contouring in one unified system
+- Dual-protocol comparison (ESTRO-EANO 15mm vs RTOG 20mm margins) quantifies clinical impact of guideline choice across cases — novel contribution with no direct prior work
+- Uses MedGemma 1.5 (released Jan 2026) which specifically added 3D MRI/CT interpretation capability, directly applicable to BraTS volumetric inputs
+- Fully reproducible on free Kaggle hardware — no expensive clinical workstations required
+- Segmentation metrics (Dice WT=0.929) are competitive with dedicated BraTS2020 challenge submissions
+
+
+and very lastly glaucome detectino project which comes under Glucotrack company 
+
+this where the glacuome project is create from sept 2023 to oct 2025
+won 10l grant fund from titan nest program organized by iim calcutta on octber 16 
+and got 30k cash prize for startup maina 9.0 on 7th december 2024 proof of cocept also this project got winning.

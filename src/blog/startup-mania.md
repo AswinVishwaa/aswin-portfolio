@@ -1,7 +1,7 @@
 ---
 title: 🥇 1st Prize - Startup Mania 9.0
 date: 2024-12-07
-priority: 1
+priority: 2
 ---
 
 🚀 Won 1st Prize at Startup Mania 9.0 for pitching the Glaucoma Detection AI project  

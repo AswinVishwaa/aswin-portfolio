@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Menu, X } from "lucide-react"; 
+import { Menu, X } from "lucide-react";
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -15,9 +15,8 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const navStyle = `px-3 py-1 rounded hover:bg-white/20 transition ${
-    location.pathname === "/" ? "text-white" : "text-white"
-  }`;
+  const navStyle = `px-3 py-1 rounded hover:bg-white/20 transition ${location.pathname === "/" ? "text-white" : "text-white"
+    }`;
 
   const links = (
     <>
@@ -27,6 +26,9 @@ const Navbar = () => {
       <Link to="/projects" className={navStyle} onClick={() => setMenuOpen(false)}>
         Projects
       </Link>
+      <Link to="/experience" className={navStyle} onClick={() => setMenuOpen(false)}>
+        Experience
+      </Link>
       <Link to="/ai" className={navStyle} onClick={() => setMenuOpen(false)}>
         AI
       </Link>
@@ -34,7 +36,7 @@ const Navbar = () => {
         Blog
       </Link>
       <a
-        href="/Aswin_Startup_resume.pdf"
+        href="/Aswin_latest_resume.pdf"
         target="_blank"
         rel="noopener noreferrer"
         className="bg-white text-black px-4 py-1 rounded-full hover:bg-gray-100 transition"
@@ -47,9 +49,8 @@ const Navbar = () => {
 
   return (
     <header
-      className={`fixed top-0 left-0 w-full z-50 transition-all ${
-        scrolled ? "backdrop-blur-md bg-black/30 shadow" : "bg-transparent"
-      }`}
+      className={`fixed top-0 left-0 w-full z-50 transition-all ${scrolled ? "backdrop-blur-md bg-black/30 shadow" : "bg-transparent"
+        }`}
     >
       <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
         <Link to="/" className="text-white font-semibold text-lg">

@@ -16,7 +16,6 @@ const BlogPreview = () => {
     const navigate = useNavigate();
     const [posts, setPosts] = useState([]);
     const [selected, setSelected] = useState(null);
-    const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
         const files = import.meta.glob("../blog/*.md", { query: "?raw", import: "default" });
@@ -35,13 +34,6 @@ const BlogPreview = () => {
     }, []);
 
     useEffect(() => {
-        const check = () => setIsMobile(window.innerWidth < 768);
-        check();
-        window.addEventListener("resize", check);
-        return () => window.removeEventListener("resize", check);
-    }, []);
-
-    useEffect(() => {
         const handleEsc = (e) => { if (e.key === "Escape") setSelected(null); };
         document.body.style.overflow = selected ? "hidden" : "";
         window.addEventListener("keydown", handleEsc);
@@ -55,7 +47,7 @@ const BlogPreview = () => {
 
     return (
         <section className="py-16 px-4 max-w-4xl mx-auto relative z-10">
-            <h2 className="text-2xl font-bold text-center mb-6">Latest Posts</h2>
+            <h2 className="text-2xl font-bold text-center mb-6 text-black">Latest Posts</h2>
 
             <div className="grid gap-6 sm:grid-cols-2">
                 {posts.map((post, i) => (
@@ -66,63 +58,64 @@ const BlogPreview = () => {
                         transition={{ delay: i * 0.2 }}
                         viewport={{ once: true }}
                         onClick={() => setSelected(post)}
-                        className="bg-white text-black p-6 rounded-lg shadow-md border
+                        className="bg-white text-black p-6 rounded-lg shadow-md border border-gray-200
               hover:scale-105 hover:shadow-xl transition-all duration-300 cursor-pointer"
                     >
                         <h3 className="font-semibold text-lg mb-2">{post.title}</h3>
-                        <p className="text-gray-700 text-sm line-clamp-3">
+                        <p className="text-gray-600 text-sm line-clamp-3">
                             {post.content.slice(0, 200)}...
                         </p>
                     </motion.div>
                 ))}
             </div>
 
+            {/* ── Centered Modal ── */}
             <AnimatePresence>
                 {selected && (
                     <>
+                        {/* Backdrop */}
                         <motion.div
-                            className="fixed inset-0 bg-black/50 z-[99]"
+                            className="fixed inset-0 bg-black/60 z-[99] flex items-center justify-center p-4"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => setSelected(null)}
-                        />
-                        <motion.div
-                            className={`fixed bg-white text-black z-[100] p-6 shadow-xl
-                ${isMobile
-                                    ? "left-0 right-0 bottom-0 top-[20%] rounded-t-2xl"
-                                    : "top-1/2 left-1/2 w-[90%] sm:w-[600px] transform -translate-x-1/2 -translate-y-1/2 rounded-lg"
-                                }
-                overflow-y-auto max-h-[85vh]`}
-                            initial={isMobile ? { y: "100%", opacity: 0 } : { y: -20, scale: 0.96, opacity: 0 }}
-                            animate={isMobile ? { y: 0, opacity: 1 } : { y: 0, scale: 1, opacity: 1 }}
-                            exit={isMobile ? { y: "100%", opacity: 0 } : { y: -20, scale: 0.96, opacity: 0 }}
-                            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-                            style={{ willChange: "transform, opacity" }}
                         >
-                            {isMobile && (
-                                <div className="w-10 h-1.5 bg-gray-300 rounded-full mx-auto mb-4" />
-                            )}
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-xl font-bold">{selected.title}</h3>
-                                <div className="flex gap-3">
-                                    <button
-                                        onClick={() => navigate("/blog")}
-                                        className="text-blue-600 hover:underline text-sm font-medium"
-                                    >
-                                        See All
-                                    </button>
-                                    <button
-                                        onClick={() => setSelected(null)}
-                                        className="text-gray-600 hover:text-black text-xl"
-                                    >
-                                        &times;
-                                    </button>
+                            {/* Modal — stopPropagation so clicking inside doesn't close */}
+                            <motion.div
+                                className="bg-white text-black z-[100] rounded-2xl shadow-2xl
+                  w-full max-w-lg max-h-[80vh] overflow-y-auto"
+                                initial={{ scale: 0.92, opacity: 0, y: 20 }}
+                                animate={{ scale: 1, opacity: 1, y: 0 }}
+                                exit={{ scale: 0.92, opacity: 0, y: 20 }}
+                                transition={{ type: "spring", damping: 26, stiffness: 280 }}
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <div className="p-6">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <h3 className="text-xl font-bold pr-4">{selected.title}</h3>
+                                        <div className="flex gap-3 flex-shrink-0">
+                                            <button
+                                                onClick={() => navigate("/blog")}
+                                                className="text-gray-500 hover:text-black text-sm font-medium underline"
+                                            >
+                                                See All
+                                            </button>
+                                            <button
+                                                onClick={() => setSelected(null)}
+                                                className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200
+                          flex items-center justify-center text-gray-500 hover:text-black text-sm transition-colors"
+                                                aria-label="Close"
+                                            >
+                                                ✕
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="text-gray-700 whitespace-pre-line text-sm leading-relaxed">
+                                        {selected.content}
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="text-gray-800 whitespace-pre-line text-sm leading-relaxed pb-10">
-                                {selected.content}
-                            </div>
+                            </motion.div>
                         </motion.div>
                     </>
                 )}

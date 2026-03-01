@@ -3,31 +3,25 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Typewriter } from "react-simple-typewriter";
 import ParticlesBackground from "../components/ParticlesBackground";
 
-// ─── Simple inline markdown renderer ───────────────────────
-// Handles: **bold**, `code`, bullet lists, numbered lists, line breaks
+// ─── Inline markdown renderer ───────────────────────────────
 const renderMarkdown = (text) => {
   if (!text) return null;
-
-  // Split into lines for list handling
   const lines = text.split("\n");
   const elements = [];
   let i = 0;
-
   while (i < lines.length) {
     const line = lines[i];
-
-    // Bullet list item
     if (/^[-*•]\s+/.test(line)) {
-      const listItems = [];
+      const items = [];
       while (i < lines.length && /^[-*•]\s+/.test(lines[i])) {
-        listItems.push(lines[i].replace(/^[-*•]\s+/, ""));
+        items.push(lines[i].replace(/^[-*•]\s+/, ""));
         i++;
       }
       elements.push(
-        <ul key={`ul-${i}`} className="list-none space-y-1.5 my-2">
-          {listItems.map((item, j) => (
+        <ul key={`ul-${i}`} className="space-y-1.5 my-1.5">
+          {items.map((item, j) => (
             <li key={j} className="flex gap-2 items-start">
-              <span className="text-indigo-400 mt-0.5 flex-shrink-0">▸</span>
+              <span className="text-gray-400 mt-0.5 flex-shrink-0">▸</span>
               <span>{inlineFormat(item)}</span>
             </li>
           ))}
@@ -35,21 +29,17 @@ const renderMarkdown = (text) => {
       );
       continue;
     }
-
-    // Numbered list item
     if (/^\d+\.\s+/.test(line)) {
-      const listItems = [];
+      const items = [];
       while (i < lines.length && /^\d+\.\s+/.test(lines[i])) {
-        listItems.push(lines[i].replace(/^\d+\.\s+/, ""));
+        items.push(lines[i].replace(/^\d+\.\s+/, ""));
         i++;
       }
       elements.push(
-        <ol key={`ol-${i}`} className="space-y-1.5 my-2">
-          {listItems.map((item, j) => (
+        <ol key={`ol-${i}`} className="space-y-1.5 my-1.5">
+          {items.map((item, j) => (
             <li key={j} className="flex gap-2 items-start">
-              <span className="text-indigo-400 font-mono text-xs mt-1 flex-shrink-0 w-4">
-                {j + 1}.
-              </span>
+              <span className="text-gray-400 font-mono text-xs mt-1 flex-shrink-0 w-4">{j + 1}.</span>
               <span>{inlineFormat(item)}</span>
             </li>
           ))}
@@ -57,45 +47,26 @@ const renderMarkdown = (text) => {
       );
       continue;
     }
-
-    // Empty line → spacer
-    if (line.trim() === "") {
-      elements.push(<div key={`sp-${i}`} className="h-2" />);
-      i++;
-      continue;
-    }
-
-    // Normal paragraph line
-    elements.push(
-      <p key={`p-${i}`} className="leading-relaxed">
-        {inlineFormat(line)}
-      </p>
-    );
+    if (line.trim() === "") { elements.push(<div key={`sp-${i}`} className="h-2" />); i++; continue; }
+    elements.push(<p key={`p-${i}`} className="leading-relaxed">{inlineFormat(line)}</p>);
     i++;
   }
-
   return elements;
 };
 
-// Format inline: **bold**, *italic*, `code`
 const inlineFormat = (text) => {
   const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`|\*[^*]+\*)/g);
   return parts.map((part, i) => {
     if (part.startsWith("**") && part.endsWith("**"))
       return <strong key={i} className="font-semibold text-white">{part.slice(2, -2)}</strong>;
     if (part.startsWith("`") && part.endsWith("`"))
-      return (
-        <code key={i} className="bg-white/10 text-indigo-300 px-1.5 py-0.5 rounded text-xs font-mono">
-          {part.slice(1, -1)}
-        </code>
-      );
+      return <code key={i} className="bg-white/10 text-gray-200 px-1.5 py-0.5 rounded text-xs font-mono">{part.slice(1, -1)}</code>;
     if (part.startsWith("*") && part.endsWith("*"))
       return <em key={i} className="italic text-gray-300">{part.slice(1, -1)}</em>;
     return part;
   });
 };
 
-// ─── Suggested questions ────────────────────────────────────
 const SUGGESTIONS = [
   "What projects has Aswin built?",
   "What AI skills does Aswin have?",
@@ -106,7 +77,7 @@ const SUGGESTIONS = [
 // ─── Component ──────────────────────────────────────────────
 const AI = () => {
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState([]); // { role: "user"|"ai", text: string }
+  const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const textareaRef = useRef(null);
   const bottomRef = useRef(null);
@@ -116,10 +87,9 @@ const AI = () => {
     if (!prompt || loading) return;
 
     setInput("");
+    if (textareaRef.current) textareaRef.current.style.height = "auto";
     setMessages((prev) => [...prev, { role: "user", text: prompt }]);
     setLoading(true);
-
-    // Add a placeholder AI message that we'll stream into
     setMessages((prev) => [...prev, { role: "ai", text: "" }]);
 
     try {
@@ -128,7 +98,6 @@ const AI = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt }),
       });
-
       if (!res.ok || !res.body) throw new Error("API error");
 
       const reader = res.body.getReader();
@@ -140,23 +109,15 @@ const AI = () => {
         const { value, done: doneReading } = await reader.read();
         done = doneReading;
         const chunk = decoder.decode(value, { stream: true });
-
         const clean = chunk
           .split("data:")
-          .filter((line) => line && !line.includes("[DONE]"))
-          .map((line) => {
-            try {
-              const parsed = JSON.parse(line.trim());
-              return parsed.choices?.[0]?.delta?.content || "";
-            } catch {
-              return "";
-            }
+          .filter((l) => l && !l.includes("[DONE]"))
+          .map((l) => {
+            try { return JSON.parse(l.trim()).choices?.[0]?.delta?.content || ""; }
+            catch { return ""; }
           })
           .join("");
-
         fullText += clean;
-
-        // Live-update the last AI message while streaming
         setMessages((prev) => {
           const updated = [...prev];
           updated[updated.length - 1] = { role: "ai", text: fullText };
@@ -167,10 +128,7 @@ const AI = () => {
       console.error(err);
       setMessages((prev) => {
         const updated = [...prev];
-        updated[updated.length - 1] = {
-          role: "ai",
-          text: "Oops! Something went wrong. Please try again.",
-        };
+        updated[updated.length - 1] = { role: "ai", text: "Oops! Something went wrong. Please try again." };
         return updated;
       });
     } finally {
@@ -180,13 +138,13 @@ const AI = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-[#0f0f0f] to-[#1a1a2e] text-white flex flex-col">
+    <div className="relative min-h-screen bg-gradient-to-br from-[#0f0f0f] to-[#1c1c1c] text-white flex flex-col">
       <ParticlesBackground id="tsparticles-ai" count={30} speed={0.2} opacity={0.12} />
 
       {/* ── Header ── */}
       <div className="relative z-10 text-center pt-28 pb-6 px-4">
         <motion.h1
-          className="text-4xl sm:text-5xl font-bold mb-3 bg-gradient-to-r from-white via-indigo-200 to-indigo-400 bg-clip-text text-transparent"
+          className="text-4xl sm:text-5xl font-bold mb-3"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
@@ -200,13 +158,14 @@ const AI = () => {
           transition={{ delay: 0.3, duration: 0.6 }}
         >
           Powered by{" "}
-          <span className="text-indigo-400 font-medium">Groq LLaMA 3.3</span> +{" "}
-          <span className="text-indigo-400 font-medium">Local RAG Embeddings</span>.
+          <span className="text-white font-medium">Groq LLaMA 3.3</span>
+          {" "}+{" "}
+          <span className="text-white font-medium">Local RAG Embeddings</span>.
           Ask about my projects, skills, or tech stack.
         </motion.p>
       </div>
 
-      {/* ── Suggestions (only before first message) ── */}
+      {/* ── Suggestion chips ── */}
       <AnimatePresence>
         {messages.length === 0 && !loading && (
           <motion.div
@@ -220,8 +179,8 @@ const AI = () => {
               <button
                 key={s}
                 onClick={() => handleAsk(s)}
-                className="text-xs bg-white/5 border border-white/10 text-gray-300 px-4 py-2 rounded-full
-                  hover:bg-indigo-500/20 hover:border-indigo-400/50 hover:text-white transition-all duration-200"
+                className="text-xs bg-white/5 border border-white/15 text-gray-300 px-4 py-2 rounded-full
+                  hover:bg-white hover:text-black hover:border-white transition-all duration-200"
               >
                 {s}
               </button>
@@ -238,18 +197,20 @@ const AI = () => {
               key={idx}
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, ease: "easeOut" }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
               className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
             >
               {msg.role === "ai" && (
-                <div className="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-xs font-bold mr-2 flex-shrink-0 mt-1">
+                <div className="w-7 h-7 rounded-full bg-white text-black flex items-center justify-center
+                  text-[10px] font-bold mr-2 flex-shrink-0 mt-1">
                   AI
                 </div>
               )}
+
               <div
                 className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-md
                   ${msg.role === "user"
-                    ? "bg-indigo-600 text-white rounded-tr-sm"
+                    ? "bg-white text-black rounded-tr-sm"
                     : "bg-white/8 backdrop-blur-sm border border-white/10 text-gray-100 rounded-tl-sm"
                   }`}
               >
@@ -257,24 +218,23 @@ const AI = () => {
                   msg.text ? (
                     <div className="space-y-1">{renderMarkdown(msg.text)}</div>
                   ) : (
-                    /* Typing dots while streaming starts */
                     <div className="flex gap-1 items-center h-5">
                       {[0, 1, 2].map((i) => (
                         <motion.span
                           key={i}
-                          className="w-1.5 h-1.5 rounded-full bg-indigo-400 block"
+                          className="w-1.5 h-1.5 rounded-full bg-gray-400 block"
                           animate={{ opacity: [0.3, 1, 0.3] }}
                           transition={{ repeat: Infinity, duration: 1.2, delay: i * 0.2 }}
                         />
                       ))}
                     </div>
                   )
-                ) : (
-                  msg.text
-                )}
+                ) : msg.text}
               </div>
+
               {msg.role === "user" && (
-                <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold ml-2 flex-shrink-0 mt-1">
+                <div className="w-7 h-7 rounded-full bg-white/15 border border-white/20 flex items-center
+                  justify-center text-[10px] font-bold ml-2 flex-shrink-0 mt-1">
                   You
                 </div>
               )}
@@ -282,10 +242,9 @@ const AI = () => {
           ))}
         </AnimatePresence>
 
-        {/* Loading status line */}
         {loading && (
           <motion.p
-            className="text-center text-indigo-400 text-xs italic"
+            className="text-center text-gray-500 text-xs italic"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
@@ -298,7 +257,6 @@ const AI = () => {
             />
           </motion.p>
         )}
-
         <div ref={bottomRef} />
       </div>
 
@@ -312,7 +270,6 @@ const AI = () => {
             value={input}
             onChange={(e) => {
               setInput(e.target.value);
-              // Auto-grow
               e.target.style.height = "auto";
               e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
             }}
@@ -322,22 +279,22 @@ const AI = () => {
                 handleAsk();
               }
             }}
-            className="flex-1 bg-transparent text-white placeholder-gray-500 text-sm outline-none resize-none
-              leading-relaxed min-h-[36px] max-h-[120px] overflow-y-auto"
+            className="flex-1 bg-transparent text-white placeholder-gray-600 text-sm outline-none
+              resize-none leading-relaxed min-h-[36px] max-h-[120px] overflow-y-auto"
           />
           <button
             onClick={() => handleAsk()}
             disabled={!input.trim() || loading}
-            className="flex-shrink-0 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed
-              text-white px-5 py-2 rounded-xl text-sm font-medium transition-all duration-200
-              hover:scale-105 active:scale-95"
+            className="flex-shrink-0 bg-white text-black hover:bg-gray-100 disabled:opacity-30
+              disabled:cursor-not-allowed px-5 py-2 rounded-xl text-sm font-semibold
+              transition-all duration-200 hover:scale-105 active:scale-95"
           >
             {loading ? "…" : "Send"}
           </button>
         </div>
         <p className="text-center text-gray-600 text-xs mt-2">
-          Press <kbd className="bg-white/10 px-1 rounded text-gray-400">Enter</kbd> to send ·{" "}
-          <kbd className="bg-white/10 px-1 rounded text-gray-400">Shift+Enter</kbd> for new line
+          <kbd className="bg-white/8 px-1.5 py-0.5 rounded text-gray-500">Enter</kbd> to send ·{" "}
+          <kbd className="bg-white/8 px-1.5 py-0.5 rounded text-gray-500">Shift+Enter</kbd> for new line
         </p>
       </div>
     </div>

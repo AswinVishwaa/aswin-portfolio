@@ -1,79 +1,121 @@
 [
   {
-    "title": "Glaucoma Detection AI",
-    "desc": "AI system for early glaucoma detection using UNet and YOLOv9. Designed for fast, lightweight screening in clinical environments. [Private Repo]",
-    "tech": ["Python", "UNet", "YOLOv9", "Flask"],
+    "title": "Glaucoma Detection AI — Titan Nest Winner",
+    "desc": "Lightweight AI screening system (UNet + YOLOv9) for early glaucoma detection. Won ₹10L grant from Titan Nest/IIM Calcutta and ₹30K at Startup Mania 9.0. Published at ICCCNT 2025 (IIT Indore). [Private Repo]",
+    "tech": [
+      "Python",
+      "UNet",
+      "YOLOv9",
+      "Flask"
+    ],
     "image": "images/glaucoma.jpg",
+    "link": "#"
+  },
+  {
+    "title": "AI Brain Tumor Radiotherapy Pipeline",
+    "desc": "End-to-end multimodal AI system for GBM radiotherapy planning on BraTS2020. 3D UNet (Dice WT=0.929) + MedGemma 1.5 radiology reports + LangChain RAG clinical agent + GPU-accelerated GTV/CTV/PTV contouring on dual Tesla T4 GPUs. 50× faster than CPU baseline.",
+    "tech": [
+      "PyTorch",
+      "3D UNet",
+      "MedGemma",
+      "LangChain",
+      "FAISS",
+      "MONAI"
+    ],
+    "image": "images/brain_tumor.jpg",
     "link": "#"
   },
   {
     "title": "Smart Email Assistant",
     "desc": "LLM-powered assistant that fetches and summarizes Gmail inboxes, then sends key alerts via WhatsApp using Twilio. [Private Repo]",
-    "tech": ["Groq", "Gmail API", "Twilio"],
+    "tech": [
+      "Groq",
+      "Gmail API",
+      "Twilio"
+    ],
     "image": "images/email.jpg",
     "link": "#"
   },
   {
+    "title": "Doctor-Agent — LLM Appointment Assistant",
+    "desc": "AI-powered appointment and reporting system using LangChain + Groq. Features natural language scheduling, doctor dashboards, and Google Calendar integration.",
+    "tech": [
+      "FastAPI",
+      "LangChain",
+      "Groq",
+      "Docker",
+      "PostgreSQL",
+      "React"
+    ],
+    "image": "images/appointment_booking.png",
+    "link": "https://github.com/AswinVishwaa/doctor-agent.git"
+  },
+  {
     "title": "Housing Price Prediction (Big Data)",
     "desc": "Built with PySpark to analyze housing data and predict prices. Includes ML modeling, visualization, and real-time predictions via Flask.",
-    "tech": ["PySpark", "Flask", "Scikit-learn", "Render"],
+    "tech": [
+      "PySpark",
+      "Flask",
+      "Scikit-learn",
+      "Render"
+    ],
     "image": "images/housing.jpg",
     "link": "https://hosuing-market-price-analysising.onrender.com/"
   },
   {
     "title": "Sign Language Recognition",
     "desc": "Real-time interpreter for 36 alphanumeric hand gestures using webcam and Graph Convolutional Networks. Freelance project.",
-    "tech": ["TensorFlow", "GCN", "OpenCV"],
+    "tech": [
+      "TensorFlow",
+      "GCN",
+      "OpenCV"
+    ],
     "image": "images/sign language.jpg",
     "link": "https://github.com/AswinVishwaa/SignLanguageDetection"
   },
   {
     "title": "Bookstore Inventory App",
     "desc": "End-to-end MERN stack app to manage books, inventory, orders, and user roles with full CRUD functionality.",
-    "tech": ["React", "Node.js", "MongoDB"],
+    "tech": [
+      "React",
+      "Node.js",
+      "MongoDB"
+    ],
     "image": "images/book store.jpg",
     "link": "https://github.com/AswinVishwaa/Book-Store"
   },
   {
     "title": "Movie Recommendation System",
     "desc": "ML-powered recommender with dual models: one using static datasets and the other fetching real-time data via TMDB API.",
-    "tech": ["Python", "Scikit-Learn", "TMDB API"],
+    "tech": [
+      "Python",
+      "Scikit-Learn",
+      "TMDB API"
+    ],
     "image": "images/movie recommendation.jpg",
     "link": "https://github.com/AswinVishwaa/Movie_Recommendation_System"
   },
   {
     "title": "Web Scraping Automation Tool",
     "desc": "Flexible Python scraper to extract data from structured websites. Used for job listings, product info, and news.",
-    "tech": ["Python", "BeautifulSoup", "Multithreading"],
+    "tech": [
+      "Python",
+      "BeautifulSoup",
+      "Multithreading"
+    ],
     "image": "images/web scrap.jpg",
     "link": "https://github.com/AswinVishwaa/FindJob_WebScraping"
   },
   {
-    "title": "Rhyme Calendar Flow (Experimental)",
-    "desc": "React-based AI calendar assistant experiment using Loable AI for rhyme generation and event narration.",
-    "tech": ["React", "Loable AI", "Experimental"],
-    "image": "images/calendar.jpg",
-    "link": "https://github.com/AswinVishwaa/react-rhythm-calendar-flow"
-  },
-  {
-    "title": "Anime Series Front-End Page",
-    "desc": "Single-page responsive website built with Bootstrap. Features anime info, watch links, questions, and merch buy options.",
-    "tech": ["HTML", "CSS", "Bootstrap"],
-    "image": "images/anime_web.jpg",
-    "link": "https://aswinvishwaa.github.io/anime_merchant_frontend/"
-  },
-  {
     "title": "Interactive Portfolio with RAG Chatbot",
-    "desc": "This very portfolio features a LangChain-powered chatbot that answers questions about my skills and projects using Groq + HuggingFace APIs.",
-    "tech": ["RAG", "React", "Vite", "Tailwind"],
+    "desc": "This portfolio featuring a RAG chatbot (Groq LLaMA 3.3 + Local Embeddings) that answers questions about my skills and projects using semantic search.",
+    "tech": [
+      "RAG",
+      "React",
+      "Vite",
+      "Tailwind"
+    ],
     "image": "images/portfolio.png",
     "link": "https://aswin-portfolio-one.vercel.app/"
-  },
-  {
-  "title": "Doctor-Agent - LLM Appointment Assistant",
-  "desc": "An AI-powered appointment and reporting system using LangChain + Groq. Features natural language scheduling, doctor dashboards, and Google Calendar integration.",
-  "tech": ["FastAPI", "LangChain", "Groq", "Docker", "PostgreSQL", "React"],
-  "image":"images/appointment_booking.png",
-  "link":"https://github.com/AswinVishwaa/doctor-agent.git"
-}
+  }
 ]

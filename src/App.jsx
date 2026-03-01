@@ -9,6 +9,7 @@ import About from "./pages/About";
 import Projects from "./pages/Projects";
 import AI from "./pages/AI";
 import Blog from "./pages/Blog";
+import Experience from "./pages/Experience";
 
 function App() {
   const location = useLocation();
@@ -32,6 +33,7 @@ function App() {
             <Route path="/projects" element={<Projects />} />
             <Route path="/ai" element={<AI />} />
             <Route path="/blog" element={<Blog />} />
+            <Route path="/experience" element={<Experience />} />
           </Routes>
         </AnimatePresence>
       </div>

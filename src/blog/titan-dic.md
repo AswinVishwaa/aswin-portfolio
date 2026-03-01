@@ -1,9 +1,11 @@
 ---
-title: 🎯 Shortlisted - Titan Design Impact Challenge
-date: 2025-06-16
-priority: 2
+title: 🏆 ₹10L Grant Winner - Titan Nest National Program
+date: 2025-10-16
+priority: 1
 ---
 
-✨ Glaucoma Detection AI shortlisted for the Titan Design Impact Challenge  
-🧪 Recognized for strong alignment with social innovation and health tech impact  
-🏁 Among select few projects pushing real-world medical AI into scalable deployment.
+🎉 Won ₹10,00,000 (₹10 Lakh) in grant funding from the Titan Nest national innovation program
+🏛️ Event organized by IIM Calcutta — one of India's premier management institutes
+🧠 Selected for the Glaucoma Detection AI project — a lightweight, portable screening device
+♻️ Recognized for strong real-world impact, scalability, and healthcare innovation
+🚀 Among the top teams nationally, competing against startups and researchers across India.
