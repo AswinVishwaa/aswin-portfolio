@@ -12,9 +12,17 @@ import { join } from "path";
 // ═══════════════════════════════════════════════════════════
 let cachedEmbedder = null;
 let cachedDocEmbeddings = null; // pre-computed embeddings for all docs
+let cachedDocs = null;          // cached doc strings
 
 const docsPath = join(process.cwd(), "api", "data", "docs.json");
-const docs = JSON.parse(readFileSync(docsPath, "utf-8"));
+
+/** Load docs — always fresh in dev, cached in production */
+const getDocs = () => {
+  if (process.env.NODE_ENV === "production" && cachedDocs) return cachedDocs;
+  const raw = readFileSync(docsPath, "utf-8");
+  cachedDocs = JSON.parse(raw);
+  return cachedDocs;
+};
 
 // ═══════════════════════════════════════════════════════════
 // 🔒 Simple in-memory rate limiter
@@ -62,19 +70,23 @@ const cosineSimilarity = (vecA, vecB) => {
 
 /** Lazy-load the embedder once and pre-compute all doc embeddings. */
 const getEmbedder = async () => {
-  if (!cachedEmbedder) {
-    console.log("📦 Loading embedder for the first time (cold start)…");
-    cachedEmbedder = await pipeline(
-      "feature-extraction",
-      "Xenova/all-MiniLM-L6-v2"
-    );
-    console.log("✅ Embedder loaded. Pre-computing doc embeddings…");
+  const docs = getDocs();
+  // In dev, always recompute embeddings so new docs take effect immediately
+  if (!cachedEmbedder || (process.env.NODE_ENV !== "production" && cachedDocEmbeddings)) {
+    if (!cachedEmbedder) {
+      console.log("📦 Loading embedder for the first time (cold start)…");
+      cachedEmbedder = await pipeline(
+        "feature-extraction",
+        "Xenova/all-MiniLM-L6-v2"
+      );
+    }
+    console.log("✅ Embedder ready. Pre-computing doc embeddings…");
     cachedDocEmbeddings = await Promise.all(
       docs.map((doc) => embedText(cachedEmbedder, doc))
     );
     console.log(`✅ Pre-computed embeddings for ${docs.length} docs.`);
   }
-  return { embedder: cachedEmbedder, docEmbeddings: cachedDocEmbeddings };
+  return { embedder: cachedEmbedder, docEmbeddings: cachedDocEmbeddings, docs };
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -129,7 +141,7 @@ export default async function handler(req, res) {
 
   try {
     // ── Embedder (cached after first call) ──────────────
-    const { embedder, docEmbeddings } = await getEmbedder();
+    const { embedder, docEmbeddings, docs } = await getEmbedder();
 
     // Embed only the user query (docs are already cached)
     const queryEmbedding = await embedText(embedder, prompt);

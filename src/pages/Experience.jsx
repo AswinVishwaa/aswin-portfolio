@@ -228,10 +228,10 @@ const Experience = () => (
         >
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
-                    { label: "Work Duration", value: "7+ Mo." },
+                    { label: "AI/ML Career", value: "2.5+ Yrs" },
                     { label: "Grant Funding", value: "₹10L" },
                     { label: "Awards Won", value: "4+" },
-                    { label: "Active Branches", value: "3" },
+                    { label: "Active Roles", value: "3" },
                 ].map((s) => (
                     <div
                         key={s.label}
