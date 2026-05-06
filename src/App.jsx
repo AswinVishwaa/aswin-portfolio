@@ -2,6 +2,7 @@ import { useLocation, Routes, Route } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import { Analytics } from "@vercel/analytics/react";
 import Loader from "./components/Loader";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -40,6 +41,7 @@ function App() {
       </div>
       <Footer />
       <SpeedInsights />
+      <Analytics />
     </div>
   );
 }
